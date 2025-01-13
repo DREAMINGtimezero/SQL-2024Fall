@@ -22,15 +22,39 @@
 #include "executor_limit.h"
 
 namespace wsdb {
+
 LimitExecutor::LimitExecutor(AbstractExecutorUptr child, int limit)
-    : AbstractExecutor(Basic), child_(std::move(child)), limit_(limit), count_(0)
-{}
+    : AbstractExecutor(Basic), child_(std::move(child)), limit_(limit), count_(0) {}
 
-void LimitExecutor::Init() { WSDB_STUDENT_TODO(l2, t1); }
+void LimitExecutor::Init() {
+    // 初始化时，调用子执行器的 Init 方法进行初始化
+    child_->Init();
+    count_ = 0;  // 重置计数器
+}
 
-void LimitExecutor::Next() { WSDB_STUDENT_TODO(l2, t1); }
+void LimitExecutor::Next() {
+    if (IsEnd()) {
+        WSDB_FETAL("LimitExecutor is already at the end.");
+    }
 
-[[nodiscard]] auto LimitExecutor::IsEnd() const -> bool { WSDB_STUDENT_TODO(l2, t1); }
+    // 获取下一条记录
+    child_->Next();
 
-[[nodiscard]] auto LimitExecutor::GetOutSchema() const -> const RecordSchema * { return child_->GetOutSchema(); }
+    // 增加计数器
+    count_++;
+
+    // 如果已经超过了限制，标记为结束
+    if (count_ >= limit_) {
+        is_end_ = true;
+    }
+}
+
+[[nodiscard]] auto LimitExecutor::IsEnd() const -> bool {
+    return count_ >= limit_;
+}
+
+[[nodiscard]] auto LimitExecutor::GetOutSchema() const -> const RecordSchema * {
+    return child_->GetOutSchema();
+}
+
 }  // namespace wsdb

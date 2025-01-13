@@ -25,12 +25,37 @@ namespace wsdb {
 
 FilterExecutor::FilterExecutor(AbstractExecutorUptr child, std::function<bool(const Record &)> filter)
     : AbstractExecutor(Basic), child_(std::move(child)), filter_(std::move(filter))
-{}
-void FilterExecutor::Init() { WSDB_STUDENT_TODO(l2, t1); }
+{
+}
 
-void FilterExecutor::Next() { WSDB_STUDENT_TODO(l2, t1); }
+void FilterExecutor::Init() {
+    // 不需要初始化操作，可以为空
+}
 
-auto FilterExecutor::IsEnd() const -> bool { WSDB_STUDENT_TODO(l2, t1); }
+void FilterExecutor::Next() {
+    // 循环获取记录直到找到符合过滤条件的记录
+    while (!child_->IsEnd()) {
+        child_->Next();  // 获取子执行器的下一条记录
 
-auto FilterExecutor::GetOutSchema() const -> const RecordSchema * { return child_->GetOutSchema(); }
+        auto &record = child_->GetRecord();  // 获取当前记录
+
+        if (filter_(record)) {
+            // 如果记录符合过滤条件，则返回该记录
+            record_ = std::make_unique<Record>(child_->GetOutSchema(), record);
+            return;
+        }
+    }
+
+    // 如果没有符合条件的记录，标记为结束
+    record_ = nullptr;
+}
+
+auto FilterExecutor::IsEnd() const -> bool {
+    return record_ == nullptr;  // 如果 record_ 为 nullptr，表示已经没有符合条件的记录
+}
+
+auto FilterExecutor::GetOutSchema() const -> const RecordSchema * {
+    return child_->GetOutSchema();  // 输出模式与子执行器相同
+}
+
 }  // namespace wsdb

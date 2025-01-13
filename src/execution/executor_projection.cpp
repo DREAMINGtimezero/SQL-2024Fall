@@ -24,17 +24,32 @@
 namespace wsdb {
 
 ProjectionExecutor::ProjectionExecutor(AbstractExecutorUptr child, RecordSchemaUptr proj_schema)
-    : AbstractExecutor(Basic), child_(std::move(child))
-{
-  out_schema_ = std::move(proj_schema);
+    : AbstractExecutor(Basic), child_(std::move(child)) {
+    out_schema_ = std::move(proj_schema);
 }
 
-// hint: record_ = std::make_unique<Record>(out_schema_.get(), *child_record);
+void ProjectionExecutor::Init() {
+    // 初始化时，调用子执行器的 Init 方法进行初始化
+    child_->Init();
+}
 
-void ProjectionExecutor::Init() { WSDB_STUDENT_TODO(l2, t1); }
+void ProjectionExecutor::Next() {
+    if (IsEnd()) {
+        WSDB_FETAL("ProjectionExecutor is already at the end.");
+    }
 
-void ProjectionExecutor::Next() { WSDB_STUDENT_TODO(l2, t1); }
+    // 获取子执行器的下一条记录
+    child_->Next();
+    
+    // 根据投影模式创建新的记录
+    record_ = std::make_unique<Record>(out_schema_.get(), *child_->GetRecord());
 
-auto ProjectionExecutor::IsEnd() const -> bool { WSDB_STUDENT_TODO(l2, t1); }
+    // 这里需要确保调用子执行器时，调用它的 `GetRecord()` 获取子记录
+}
+
+auto ProjectionExecutor::IsEnd() const -> bool {
+    // 检查子执行器是否结束
+    return child_->IsEnd();
+}
 
 }  // namespace wsdb

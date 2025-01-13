@@ -23,18 +23,48 @@
 
 namespace wsdb {
 
-SeqScanExecutor::SeqScanExecutor(TableHandle *tab) : AbstractExecutor(Basic), tab_(tab) {}
+SeqScanExecutor::SeqScanExecutor(TableHandle *tab) : AbstractExecutor(Basic), tab_(tab), rid_(INVALID_RID) {}
 
 void SeqScanExecutor::Init()
 {
-  rid_ = tab_->GetFirstRID();
-  
-  WSDB_STUDENT_TODO(l2, t1);
+    // Initialize the scan with the first record ID
+    rid_ = tab_->GetFirstRID();
+
+    if (rid_ == INVALID_RID) {
+        // If there are no records in the table, set is_end_ to true immediately
+        is_end_ = true;
+    } else {
+        is_end_ = false;
+    }
 }
 
-void SeqScanExecutor::Next() { WSDB_STUDENT_TODO(l2, t1); }
+void SeqScanExecutor::Next()
+{
+    if (is_end_) {
+        WSDB_FETAL("SeqScanExecutor has already finished scanning");
+    }
 
-auto SeqScanExecutor::IsEnd() const -> bool { WSDB_STUDENT_TODO(l2, t1); }
+    // Get the next record ID in the table
+    rid_ = tab_->GetNextRID(rid_);
 
-auto SeqScanExecutor::GetOutSchema() const -> const RecordSchema * { return &tab_->GetSchema(); }
+    // If we reach INVALID_RID, the scan is complete
+    if (rid_ == INVALID_RID) {
+        is_end_ = true;
+    } else {
+        // Otherwise, load the current record for output
+        auto record = tab_->GetRecord(rid_);
+        record_ = std::make_unique<Record>(tab_->GetSchema(), record);
+    }
+}
+
+auto SeqScanExecutor::IsEnd() const -> bool
+{
+    return is_end_;
+}
+
+auto SeqScanExecutor::GetOutSchema() const -> const RecordSchema *
+{
+    return &tab_->GetSchema();
+}
+
 }  // namespace wsdb
