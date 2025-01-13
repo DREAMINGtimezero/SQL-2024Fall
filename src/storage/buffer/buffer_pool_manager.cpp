@@ -41,11 +41,6 @@ BufferPoolManager::BufferPoolManager(DiskManager *disk_manager, wsdb::LogManager
     free_list_.push_back(i);
   }
 }
-
-auto BufferPoolManager::FetchPage(file_id_t fid, page_id_t pid) -> Page * { WSDB_STUDENT_TODO(l1, t2); }
-
-auto BufferPoolManager::UnpinPage(file_id_t fid, page_id_t pid, bool is_dirty) -> bool { WSDB_STUDENT_TODO(l1, t2); }
-
 auto BufferPoolManager::DeletePage(file_id_t fid, page_id_t pid) -> bool { WSDB_STUDENT_TODO(l1, t2); }
 
 auto BufferPoolManager::DeleteAllPages(file_id_t fid) -> bool { WSDB_STUDENT_TODO(l1, t2); }

@@ -17,7 +17,7 @@
 
 #ifndef WSDB_LRU_REPLACER_H
 #define WSDB_LRU_REPLACER_H
-
+#pragma once
 #include <list>
 #include <mutex>  // NOLINT
 #include <vector>
@@ -86,9 +86,11 @@ private:
   /// Hash map to store the frame id and the iterator in the LRU list
   std::unordered_map<frame_id_t, std::list<std::pair<frame_id_t, bool>>::iterator> lru_hash_;
   // number of evictable frames
+  std::unordered_map<frame_id_t, size_t> access_timestamp_; 
   size_t cur_size_;
   // maximum number of frames
   size_t max_size_;
+  size_t timestamp_counter_;
 };
 
 }  // namespace wsdb
